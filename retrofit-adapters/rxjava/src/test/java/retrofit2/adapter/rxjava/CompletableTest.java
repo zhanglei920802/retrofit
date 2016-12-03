@@ -16,12 +16,15 @@
 package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
@@ -29,45 +32,53 @@ import rx.Completable;
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 
 public final class CompletableTest {
-  @Rule public final MockWebServer server = new MockWebServer();
-  @Rule public final TestRule pluginsReset = new RxJavaPluginsResetRule();
-  @Rule public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final TestRule pluginsReset = new RxJavaPluginsResetRule();
+    @Rule
+    public final RecordingSubscriber.Rule subscriberRule = new RecordingSubscriber.Rule();
 
-  interface Service {
-    @GET("/") Completable completable();
-  }
+    interface Service {
+        @GET("/")
+        Completable completable();
+    }
 
-  private Service service;
+    private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-        .build();
-    service = retrofit.create(Service.class);
-  }
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build();
+        service = retrofit.create(Service.class);
+    }
 
-  @Test public void completableSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void completableSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    RecordingSubscriber<Void> subscriber = subscriberRule.create();
-    service.completable().unsafeSubscribe(subscriber);
-    subscriber.assertCompleted();
-  }
+        RecordingSubscriber<Void> subscriber = subscriberRule.create();
+        service.completable().unsafeSubscribe(subscriber);
+        subscriber.assertCompleted();
+    }
 
-  @Test public void completableSuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
+    @Test
+    public void completableSuccess404() {
+        server.enqueue(new MockResponse().setResponseCode(404));
 
-    RecordingSubscriber<Void> subscriber = subscriberRule.create();
-    service.completable().unsafeSubscribe(subscriber);
-    subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
-  }
+        RecordingSubscriber<Void> subscriber = subscriberRule.create();
+        service.completable().unsafeSubscribe(subscriber);
+        subscriber.assertError(HttpException.class, "HTTP 404 Client Error");
+    }
 
-  @Test public void completableFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    @Test
+    public void completableFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    RecordingSubscriber<Void> subscriber = subscriberRule.create();
-    service.completable().unsafeSubscribe(subscriber);
-    subscriber.assertError(IOException.class);
-  }
+        RecordingSubscriber<Void> subscriber = subscriberRule.create();
+        service.completable().unsafeSubscribe(subscriber);
+        subscriber.assertError(IOException.class);
+    }
 }

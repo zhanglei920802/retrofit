@@ -50,10 +50,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target(PARAMETER)
 public @interface Path {
-  String value();
+    String value();
 
-  /**
-   * Specifies whether the argument value to the annotated method parameter is already URL encoded.
-   */
-  boolean encoded() default false;
+    /**
+     * Specifies whether the argument value to the annotated method parameter is already URL encoded.
+     */
+    boolean encoded() default false;
 }

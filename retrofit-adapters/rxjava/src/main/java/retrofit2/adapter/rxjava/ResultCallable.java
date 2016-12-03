@@ -16,20 +16,22 @@
 package retrofit2.adapter.rxjava;
 
 import java.util.concurrent.Callable;
+
 import retrofit2.Response;
 
 final class ResultCallable<R> implements Callable<Result<R>> {
-  private final Callable<Response<R>> responseCallable;
+    private final Callable<Response<R>> responseCallable;
 
-  ResultCallable(Callable<Response<R>> responseCallable) {
-    this.responseCallable = responseCallable;
-  }
-
-  @Override public Result<R> call() {
-    try {
-      return Result.response(responseCallable.call());
-    } catch (Throwable t) {
-      return Result.error(t);
+    ResultCallable(Callable<Response<R>> responseCallable) {
+        this.responseCallable = responseCallable;
     }
-  }
+
+    @Override
+    public Result<R> call() {
+        try {
+            return Result.response(responseCallable.call());
+        } catch (Throwable t) {
+            return Result.error(t);
+        }
+    }
 }

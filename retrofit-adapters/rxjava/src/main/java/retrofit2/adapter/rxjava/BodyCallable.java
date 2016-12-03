@@ -16,20 +16,22 @@
 package retrofit2.adapter.rxjava;
 
 import java.util.concurrent.Callable;
+
 import retrofit2.Response;
 
 final class BodyCallable<R> implements Callable<R> {
-  private final Callable<Response<R>> responseCallable;
+    private final Callable<Response<R>> responseCallable;
 
-  BodyCallable(Callable<Response<R>> responseCallable) {
-    this.responseCallable = responseCallable;
-  }
-
-  @Override public R call() throws Exception {
-    Response<R> response = responseCallable.call();
-    if (response.isSuccessful()) {
-      return response.body();
+    BodyCallable(Callable<Response<R>> responseCallable) {
+        this.responseCallable = responseCallable;
     }
-    throw new HttpException(response);
-  }
+
+    @Override
+    public R call() throws Exception {
+        Response<R> response = responseCallable.call();
+        if (response.isSuccessful()) {
+            return response.body();
+        }
+        throw new HttpException(response);
+    }
 }

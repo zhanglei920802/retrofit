@@ -16,12 +16,15 @@
 package retrofit2;
 
 import com.google.common.reflect.TypeToken;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.Executor;
+
 import okhttp3.Request;
+
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,137 +37,164 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @SuppressWarnings("unchecked")
 public final class ExecutorCallAdapterFactoryTest {
-  private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
+    private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
-  private final Retrofit retrofit = new Retrofit.Builder()
-      .baseUrl("http://localhost:1")
-      .build();
-  private final Callback<String> callback = mock(Callback.class);
-  private final Executor callbackExecutor = spy(new Executor() {
-    @Override public void execute(Runnable runnable) {
-      runnable.run();
-    }
-  });
-  private final CallAdapter.Factory factory = new ExecutorCallAdapterFactory(callbackExecutor);
-
-  @Test public void rawTypeThrows() {
-    try {
-      factory.get(Call.class, NO_ANNOTATIONS, retrofit);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessage("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
-    }
-  }
-
-  @Test public void responseType() {
-    Type classType = new TypeToken<Call<String>>() {}.getType();
-    assertThat(factory.get(classType, NO_ANNOTATIONS, retrofit).responseType())
-        .isEqualTo(String.class);
-    Type wilcardType = new TypeToken<Call<? extends String>>() {}.getType();
-    assertThat(factory.get(wilcardType, NO_ANNOTATIONS, retrofit).responseType())
-        .isEqualTo(String.class);
-    Type genericType = new TypeToken<Call<List<String>>>() {}.getType();
-    assertThat(factory.get(genericType, NO_ANNOTATIONS, retrofit).responseType())
-        .isEqualTo(new TypeToken<List<String>>() {}.getType());
-  }
-
-  @Test public void adaptedCallExecute() throws IOException {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    final Response<String> response = Response.success("Hi");
-    Call<String> call = adapter.adapt(new EmptyCall() {
-      @Override public Response<String> execute() throws IOException {
-        return response;
-      }
+    private final Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl("http://localhost:1")
+            .build();
+    private final Callback<String> callback = mock(Callback.class);
+    private final Executor callbackExecutor = spy(new Executor() {
+        @Override
+        public void execute(Runnable runnable) {
+            runnable.run();
+        }
     });
-    assertThat(call.execute()).isSameAs(response);
-  }
+    private final CallAdapter.Factory factory = new ExecutorCallAdapterFactory(callbackExecutor);
 
-  @Test public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    final Response<String> response = Response.success("Hi");
-    EmptyCall originalCall = new EmptyCall() {
-      @Override public void enqueue(Callback<String> callback) {
-        callback.onResponse(this, response);
-      }
-    };
-    Call<String> call = adapter.adapt(originalCall);
-    call.enqueue(callback);
-    verify(callbackExecutor).execute(any(Runnable.class));
-    verify(callback).onResponse(call, response);
-  }
-
-  @Test public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    final Throwable throwable = new IOException();
-    EmptyCall originalCall = new EmptyCall() {
-      @Override public void enqueue(Callback<String> callback) {
-        callback.onFailure(this, throwable);
-      }
-    };
-    Call<String> call = adapter.adapt(originalCall);
-    call.enqueue(callback);
-    verify(callbackExecutor).execute(any(Runnable.class));
-    verifyNoMoreInteractions(callbackExecutor);
-    verify(callback).onFailure(call, throwable);
-    verifyNoMoreInteractions(callback);
-  }
-
-  @Test public void adaptedCallCloneDeepCopy() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    Call<String> delegate = mock(Call.class);
-    Call<String> call = adapter.adapt(delegate);
-    Call<String> cloned = call.clone();
-    assertThat(cloned).isNotSameAs(call);
-    verify(delegate).clone();
-    verifyNoMoreInteractions(delegate);
-  }
-
-  @Test public void adaptedCallCancel() {
-    Type returnType = new TypeToken<Call<String>>() {}.getType();
-    CallAdapter<String, Call<String>> adapter =
-        (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
-    Call<String> delegate = mock(Call.class);
-    Call<String> call = adapter.adapt(delegate);
-    call.cancel();
-    verify(delegate).cancel();
-    verifyNoMoreInteractions(delegate);
-  }
-
-  static class EmptyCall implements Call<String> {
-    @Override public void enqueue(Callback<String> callback) {
-      throw new UnsupportedOperationException();
+    @Test
+    public void rawTypeThrows() {
+        try {
+            factory.get(Call.class, NO_ANNOTATIONS, retrofit);
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertThat(e).hasMessage("Call return type must be parameterized as Call<Foo> or Call<? extends Foo>");
+        }
     }
 
-    @Override public boolean isExecuted() {
-      return false;
+    @Test
+    public void responseType() {
+        Type classType = new TypeToken<Call<String>>() {
+        }.getType();
+        assertThat(factory.get(classType, NO_ANNOTATIONS, retrofit).responseType())
+                .isEqualTo(String.class);
+        Type wilcardType = new TypeToken<Call<? extends String>>() {
+        }.getType();
+        assertThat(factory.get(wilcardType, NO_ANNOTATIONS, retrofit).responseType())
+                .isEqualTo(String.class);
+        Type genericType = new TypeToken<Call<List<String>>>() {
+        }.getType();
+        assertThat(factory.get(genericType, NO_ANNOTATIONS, retrofit).responseType())
+                .isEqualTo(new TypeToken<List<String>>() {
+                }.getType());
     }
 
-    @Override public Response<String> execute() throws IOException {
-      throw new UnsupportedOperationException();
+    @Test
+    public void adaptedCallExecute() throws IOException {
+        Type returnType = new TypeToken<Call<String>>() {
+        }.getType();
+        CallAdapter<String, Call<String>> adapter =
+                (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+        final Response<String> response = Response.success("Hi");
+        Call<String> call = adapter.adapt(new EmptyCall() {
+            @Override
+            public Response<String> execute() throws IOException {
+                return response;
+            }
+        });
+        assertThat(call.execute()).isSameAs(response);
     }
 
-    @Override public void cancel() {
-      throw new UnsupportedOperationException();
+    @Test
+    public void adaptedCallEnqueueUsesExecutorForSuccessCallback() {
+        Type returnType = new TypeToken<Call<String>>() {
+        }.getType();
+        CallAdapter<String, Call<String>> adapter =
+                (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+        final Response<String> response = Response.success("Hi");
+        EmptyCall originalCall = new EmptyCall() {
+            @Override
+            public void enqueue(Callback<String> callback) {
+                callback.onResponse(this, response);
+            }
+        };
+        Call<String> call = adapter.adapt(originalCall);
+        call.enqueue(callback);
+        verify(callbackExecutor).execute(any(Runnable.class));
+        verify(callback).onResponse(call, response);
     }
 
-    @Override public boolean isCanceled() {
-      return false;
+    @Test
+    public void adaptedCallEnqueueUsesExecutorForFailureCallback() {
+        Type returnType = new TypeToken<Call<String>>() {
+        }.getType();
+        CallAdapter<String, Call<String>> adapter =
+                (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+        final Throwable throwable = new IOException();
+        EmptyCall originalCall = new EmptyCall() {
+            @Override
+            public void enqueue(Callback<String> callback) {
+                callback.onFailure(this, throwable);
+            }
+        };
+        Call<String> call = adapter.adapt(originalCall);
+        call.enqueue(callback);
+        verify(callbackExecutor).execute(any(Runnable.class));
+        verifyNoMoreInteractions(callbackExecutor);
+        verify(callback).onFailure(call, throwable);
+        verifyNoMoreInteractions(callback);
     }
 
-    @Override public Call<String> clone() {
-      throw new UnsupportedOperationException();
+    @Test
+    public void adaptedCallCloneDeepCopy() {
+        Type returnType = new TypeToken<Call<String>>() {
+        }.getType();
+        CallAdapter<String, Call<String>> adapter =
+                (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+        Call<String> delegate = mock(Call.class);
+        Call<String> call = adapter.adapt(delegate);
+        Call<String> cloned = call.clone();
+        assertThat(cloned).isNotSameAs(call);
+        verify(delegate).clone();
+        verifyNoMoreInteractions(delegate);
     }
 
-    @Override public Request request() {
-      throw new UnsupportedOperationException();
+    @Test
+    public void adaptedCallCancel() {
+        Type returnType = new TypeToken<Call<String>>() {
+        }.getType();
+        CallAdapter<String, Call<String>> adapter =
+                (CallAdapter<String, Call<String>>) factory.get(returnType, NO_ANNOTATIONS, retrofit);
+        Call<String> delegate = mock(Call.class);
+        Call<String> call = adapter.adapt(delegate);
+        call.cancel();
+        verify(delegate).cancel();
+        verifyNoMoreInteractions(delegate);
     }
-  }
+
+    static class EmptyCall implements Call<String> {
+        @Override
+        public void enqueue(Callback<String> callback) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isExecuted() {
+            return false;
+        }
+
+        @Override
+        public Response<String> execute() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void cancel() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public Call<String> clone() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Request request() {
+            throw new UnsupportedOperationException();
+        }
+    }
 }

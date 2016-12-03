@@ -17,18 +17,20 @@ package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
+
 import retrofit2.Call;
 import retrofit2.Response;
 
 final class ResponseCallable<T> implements Callable<Response<T>> {
-  private final Call<T> call;
+    private final Call<T> call;
 
-  ResponseCallable(Call<T> call) {
-    this.call = call;
-  }
+    ResponseCallable(Call<T> call) {
+        this.call = call;
+    }
 
-  @Override public Response<T> call() throws IOException {
-    // Since Call is a one-shot type, clone it for each new caller.
-    return call.clone().execute();
-  }
+    @Override
+    public Response<T> call() throws IOException {
+        // Since Call is a one-shot type, clone it for each new caller.
+        return call.clone().execute();
+    }
 }

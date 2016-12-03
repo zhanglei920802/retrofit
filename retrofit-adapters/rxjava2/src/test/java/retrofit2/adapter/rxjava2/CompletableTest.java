@@ -16,57 +16,68 @@
 package retrofit2.adapter.rxjava2;
 
 import io.reactivex.Completable;
+
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 
 import static okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST;
 
 public final class CompletableTest {
-  @Rule public final MockWebServer server = new MockWebServer();
-  @Rule public final RecordingCompletableObserver.Rule observerRule =
-      new RecordingCompletableObserver.Rule();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final RecordingCompletableObserver.Rule observerRule =
+            new RecordingCompletableObserver.Rule();
 
-  interface Service {
-    @GET("/") Completable completable();
-  }
+    interface Service {
+        @GET("/")
+        Completable completable();
+    }
 
-  private Service service;
+    private Service service;
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-        .build();
-    service = retrofit.create(Service.class);
-  }
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build();
+        service = retrofit.create(Service.class);
+    }
 
-  @Test public void completableSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void completableSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    RecordingCompletableObserver observer = observerRule.create();
-    service.completable().subscribe(observer);
-    observer.assertComplete();
-  }
+        RecordingCompletableObserver observer = observerRule.create();
+        service.completable().subscribe(observer);
+        observer.assertComplete();
+    }
 
-  @Test public void completableSuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
+    @Test
+    public void completableSuccess404() {
+        server.enqueue(new MockResponse().setResponseCode(404));
 
-    RecordingCompletableObserver observer = observerRule.create();
-    service.completable().subscribe(observer);
-    observer.assertError(HttpException.class, "HTTP 404 Client Error");
-  }
+        RecordingCompletableObserver observer = observerRule.create();
+        service.completable().subscribe(observer);
+        observer.assertError(HttpException.class, "HTTP 404 Client Error");
+    }
 
-  @Test public void completableFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    @Test
+    public void completableFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    RecordingCompletableObserver observer = observerRule.create();
-    service.completable().subscribe(observer);
-    observer.assertError(IOException.class);
-  }
+        RecordingCompletableObserver observer = observerRule.create();
+        service.completable().subscribe(observer);
+        observer.assertError(IOException.class);
+    }
 }

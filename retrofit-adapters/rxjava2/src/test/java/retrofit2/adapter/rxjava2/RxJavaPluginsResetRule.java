@@ -16,21 +16,24 @@
 package retrofit2.adapter.rxjava2;
 
 import io.reactivex.plugins.RxJavaPlugins;
+
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 final class RxJavaPluginsResetRule implements TestRule {
-  @Override public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override public void evaluate() throws Throwable {
-        RxJavaPlugins.reset();
-        try {
-          base.evaluate();
-        } finally {
-          RxJavaPlugins.reset();
-        }
-      }
-    };
-  }
+    @Override
+    public Statement apply(final Statement base, Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                RxJavaPlugins.reset();
+                try {
+                    base.evaluate();
+                } finally {
+                    RxJavaPlugins.reset();
+                }
+            }
+        };
+    }
 }

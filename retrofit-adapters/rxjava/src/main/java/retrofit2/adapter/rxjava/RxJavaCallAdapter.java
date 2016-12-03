@@ -16,65 +16,70 @@
 package retrofit2.adapter.rxjava;
 
 import java.lang.reflect.Type;
+
 import retrofit2.Call;
 import retrofit2.CallAdapter;
 import rx.Observable;
 import rx.Scheduler;
 
 final class RxJavaCallAdapter<R> implements CallAdapter<R, Object> {
-  private final Type responseType;
-  private final Scheduler scheduler;
-  private final boolean isResult;
-  private final boolean isBody;
-  private final boolean isSingle;
-  private final boolean isCompletable;
+    private final Type responseType;
+    private final Scheduler scheduler;
+    private final boolean isResult;
+    private final boolean isBody;
+    private final boolean isSingle;
+    private final boolean isCompletable;
 
-  RxJavaCallAdapter(Type responseType, Scheduler scheduler, boolean isResult, boolean isBody,
-      boolean isSingle, boolean isCompletable) {
-    this.responseType = responseType;
-    this.scheduler = scheduler;
-    this.isResult = isResult;
-    this.isBody = isBody;
-    this.isSingle = isSingle;
-    this.isCompletable = isCompletable;
-  }
-
-  @Override public Type responseType() {
-    return responseType;
-  }
-
-  @Override public Object adapt(Call<R> call) {
-    ResponseCallable<R> resultCallable = new ResponseCallable<>(call);
-
-    Observable<?> observable;
-    if (isResult) {
-      observable = Observable.fromCallable(new ResultCallable<>(resultCallable));
-    } else if (isBody) {
-      observable = Observable.fromCallable(new BodyCallable<>(resultCallable));
-    } else {
-      observable = Observable.fromCallable(resultCallable);
+    RxJavaCallAdapter(Type responseType, Scheduler scheduler, boolean isResult, boolean isBody,
+            boolean isSingle, boolean isCompletable) {
+        this.responseType = responseType;
+        this.scheduler = scheduler;
+        this.isResult = isResult;
+        this.isBody = isBody;
+        this.isSingle = isSingle;
+        this.isCompletable = isCompletable;
     }
 
-    if (scheduler != null) {
-      observable = observable.subscribeOn(scheduler);
+    @Override
+    public Type responseType() {
+        return responseType;
     }
 
-    if (isSingle) {
-      return observable.toSingle();
-    }
-    if (isCompletable) {
-      return CompletableHelper.toCompletable(observable);
-    }
-    return observable;
-  }
+    @Override
+    public Object adapt(Call<R> call) {
+        ResponseCallable<R> resultCallable = new ResponseCallable<>(call);
 
-  /**
-   * Separate static class defers classloading and bytecode verification since Completable is not an
-   * RxJava stable API yet.
-   */
-  private static final class CompletableHelper {
-    static Object toCompletable(Observable<?> observable) {
-      return observable.toCompletable();
+        Observable<?> observable;
+        if (isResult) {
+            observable = Observable.fromCallable(new ResultCallable<>(resultCallable));
+        }
+        else if (isBody) {
+            observable = Observable.fromCallable(new BodyCallable<>(resultCallable));
+        }
+        else {
+            observable = Observable.fromCallable(resultCallable);
+        }
+
+        if (scheduler != null) {
+            observable = observable.subscribeOn(scheduler);
+        }
+
+        if (isSingle) {
+            return observable.toSingle();
+        }
+        if (isCompletable) {
+            return CompletableHelper.toCompletable(observable);
+        }
+        return observable;
     }
-  }
+
+    /**
+     * Separate static class defers classloading and bytecode verification since Completable is not an
+     * RxJava stable API yet.
+     */
+    private static final class CompletableHelper {
+        static Object toCompletable(Observable<?> observable) {
+            return observable.toCompletable();
+        }
+    }
 }

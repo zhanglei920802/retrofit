@@ -35,6 +35,7 @@ import okhttp3.Request;
 public interface Call<T> extends Cloneable {
     /**
      * Synchronously send the request and return its response.
+     * 同步执行请求并返回结果
      *
      * @throws IOException      if a problem occurred talking to the server.
      * @throws RuntimeException (and subclasses) if an unexpected error occurs creating the request
@@ -45,18 +46,24 @@ public interface Call<T> extends Cloneable {
     /**
      * Asynchronously send the request and notify {@code callback} of its response or if an error
      * occurred talking to the server, creating the request, or processing the response.
+     * <p>
+     * 异步执行请求
      */
     void enqueue(Callback<T> callback);
 
     /**
      * Returns true if this call has been either {@linkplain #execute() executed} or {@linkplain
      * #enqueue(Callback) enqueued}. It is an error to execute or enqueue a call more than once.
+     * <p>
+     * 判断当前的call是否已经被执行
      */
     boolean isExecuted();
 
     /**
      * Cancel this call. An attempt will be made to cancel in-flight calls, and if the call has not
      * yet been executed it never will be.
+     * <p>
+     * 取消当前的call的执行
      */
     void cancel();
 

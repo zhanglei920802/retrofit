@@ -24,6 +24,8 @@ import java.lang.reflect.Type;
  * created by {@linkplain Factory a factory} which is
  * {@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into the {@link Retrofit}
  * instance.
+ *
+ * 将Response(call)适配为T
  */
 public interface CallAdapter<R, T> {
     /**

@@ -29,11 +29,17 @@ final class OkHttpCall<T> implements Call<T> {
     private final ServiceMethod<T, ?> serviceMethod;
     private final Object[] args;
 
+    /**
+     * 是否被取消
+     */
     private volatile boolean canceled;
 
     // All guarded by this.
-    private okhttp3.Call rawCall;
+    private okhttp3.Call rawCall;//OkHttp访问
     private Throwable creationFailure; // Either a RuntimeException or IOException.
+    /**
+     * 是否被执行
+     */
     private boolean executed;
 
     OkHttpCall(ServiceMethod<T, ?> serviceMethod, Object[] args) {
@@ -53,6 +59,10 @@ final class OkHttpCall<T> implements Call<T> {
         if (call != null) {
             return call.request();
         }
+
+        /**
+         * 判断上次是否创建失败
+         */
         if (creationFailure != null) {
             if (creationFailure instanceof IOException) {
                 throw new RuntimeException("Unable to create request.", creationFailure);
@@ -61,6 +71,8 @@ final class OkHttpCall<T> implements Call<T> {
                 throw (RuntimeException) creationFailure;
             }
         }
+
+        //创建
         try {
             return (rawCall = createRawCall()).request();
         } catch (RuntimeException e) {
@@ -76,6 +88,7 @@ final class OkHttpCall<T> implements Call<T> {
     public void enqueue(final Callback<T> callback) {
         if (callback == null) throw new NullPointerException("callback == null");
 
+        //用于okHttp.Call
         okhttp3.Call call;
         Throwable failure;
 
@@ -94,21 +107,25 @@ final class OkHttpCall<T> implements Call<T> {
             }
         }
 
+        //创建rawcall失败
         if (failure != null) {
             callback.onFailure(this, failure);
             return;
         }
 
+        //发现已经被canceled了
         if (canceled) {
             call.cancel();
         }
 
+        //请求okhttp执行
         call.enqueue(new okhttp3.Callback() {
             @Override
             public void onResponse(okhttp3.Call call, okhttp3.Response rawResponse)
                     throws IOException {
                 Response<T> response;
                 try {
+                    //解析响应
                     response = parseResponse(rawResponse);
                 } catch (Throwable e) {
                     callFailure(e);
@@ -184,6 +201,12 @@ final class OkHttpCall<T> implements Call<T> {
         return parseResponse(call.execute());
     }
 
+    /**
+     * 创建一个新的call
+     *
+     * @return
+     * @throws IOException
+     */
     private okhttp3.Call createRawCall() throws IOException {
         Request request = serviceMethod.toRequest(args);
         okhttp3.Call call = serviceMethod.callFactory.newCall(request);
@@ -201,6 +224,7 @@ final class OkHttpCall<T> implements Call<T> {
                                  .body(new NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))
                                  .build();
 
+        //异常
         int code = rawResponse.code();
         if (code < 200 || code >= 300) {
             try {
@@ -212,6 +236,7 @@ final class OkHttpCall<T> implements Call<T> {
             }
         }
 
+        //无内容
         if (code == 204 || code == 205) {
             rawBody.close();
             return Response.success(null, rawResponse);
@@ -219,6 +244,7 @@ final class OkHttpCall<T> implements Call<T> {
 
         ExceptionCatchingRequestBody catchingBody = new ExceptionCatchingRequestBody(rawBody);
         try {
+            //响应成功
             T body = serviceMethod.toResponse(catchingBody);
             return Response.success(body, rawResponse);
         } catch (RuntimeException e) {
@@ -229,6 +255,9 @@ final class OkHttpCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * 取消
+     */
     public void cancel() {
         canceled = true;
 
@@ -251,6 +280,9 @@ final class OkHttpCall<T> implements Call<T> {
         }
     }
 
+    /**
+     * 没有内容
+     */
     static final class NoContentResponseBody extends ResponseBody {
         private final MediaType contentType;
         private final long contentLength;

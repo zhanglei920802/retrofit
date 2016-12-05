@@ -23,6 +23,9 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Streaming;
 
+/**
+ * 内建的转换器
+ */
 final class BuiltInConverters extends Converter.Factory {
     @Override
     public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
@@ -66,6 +69,9 @@ final class BuiltInConverters extends Converter.Factory {
         }
     }
 
+    /**
+     * 好像什么也没有做
+     */
     static final class StreamingResponseBodyConverter
             implements Converter<ResponseBody, ResponseBody> {
         static final StreamingResponseBodyConverter INSTANCE = new StreamingResponseBodyConverter();
@@ -76,6 +82,9 @@ final class BuiltInConverters extends Converter.Factory {
         }
     }
 
+    /**
+     * 转换
+     */
     static final class BufferingResponseBodyConverter
             implements Converter<ResponseBody, ResponseBody> {
         static final BufferingResponseBodyConverter INSTANCE = new BufferingResponseBodyConverter();
@@ -84,6 +93,7 @@ final class BuiltInConverters extends Converter.Factory {
         public ResponseBody convert(ResponseBody value) throws IOException {
             try {
                 // Buffer the entire body to avoid future I/O.
+                //将所有的内容放到buffer里面
                 return Utils.buffer(value);
             } finally {
                 value.close();
@@ -91,6 +101,9 @@ final class BuiltInConverters extends Converter.Factory {
         }
     }
 
+    /**
+     * 将Object转化为String
+     */
     static final class ToStringConverter implements Converter<Object, String> {
         static final ToStringConverter INSTANCE = new ToStringConverter();
 

@@ -36,8 +36,17 @@ import retrofit2.http.QueryMap;
  * Convert objects to and from their representation in HTTP. Instances are created by {@linkplain
  * Factory a factory} which is {@linkplain Retrofit.Builder#addConverterFactory(Factory) installed}
  * into the {@link Retrofit} instance.
+ * <p>
+ * 内容转换器
  */
 public interface Converter<F, T> {
+    /**
+     * 将F 转换为T
+     *
+     * @param value
+     * @return
+     * @throws IOException
+     */
     T convert(F value) throws IOException;
 
     /** Creates {@link Converter} instances based on a type and target usage. */
@@ -47,6 +56,8 @@ public interface Converter<F, T> {
          * {@code type} cannot be handled by this factory. This is used to create converters for
          * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
          * declaration.
+         *
+         * 将Response转为指定的类型
          */
         public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
                 Retrofit retrofit) {
@@ -58,6 +69,8 @@ public interface Converter<F, T> {
          * {@code type} cannot be handled by this factory. This is used to create converters for types
          * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap}
          * values.
+         *
+         * 将request转化为指定类型
          */
         public Converter<?, RequestBody> requestBodyConverter(Type type,
                 Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
@@ -70,6 +83,8 @@ public interface Converter<F, T> {
          * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values,
          * {@link Header @Header}, {@link HeaderMap @HeaderMap}, {@link Path @Path},
          * {@link Query @Query}, and {@link QueryMap @QueryMap} values.
+         *
+         * 将类容转为String类型
          */
         public Converter<?, String> stringConverter(Type type, Annotation[] annotations,
                 Retrofit retrofit) {

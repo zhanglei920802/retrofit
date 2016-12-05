@@ -42,6 +42,11 @@ final class OkHttpCall<T> implements Call<T> {
      */
     private boolean executed;
 
+    /**
+     * 构造一个call
+     * @param serviceMethod
+     * @param args
+     */
     OkHttpCall(ServiceMethod<T, ?> serviceMethod, Object[] args) {
         this.serviceMethod = serviceMethod;
         this.args = args;

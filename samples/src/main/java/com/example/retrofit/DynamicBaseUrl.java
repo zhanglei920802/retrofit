@@ -16,6 +16,7 @@
 package com.example.retrofit;
 
 import java.io.IOException;
+
 import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -74,13 +75,13 @@ public final class DynamicBaseUrl {
 
     Pop pop = retrofit.create(Pop.class);
 
-    Response<ResponseBody> response1 = pop.robots().execute();
-    System.out.println("Response from: " + response1.raw().request().url());
-    System.out.println(response1.body().string());
+//    Response<ResponseBody> response1 = pop.robots().execute();
+//    System.out.println("Response from: " + response1.raw().request().url());
+//    System.out.println(response1.body().string());
 
     hostSelectionInterceptor.setHost("www.pepsi.com");
 
-    pop.robots().enqueue(new Callback<ResponseBody>(){
+    pop.robots()/*将服务方法加入到队列*/.enqueue(new Callback<ResponseBody>(){
         @Override
         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
             try {
@@ -96,7 +97,7 @@ public final class DynamicBaseUrl {
 
         }
     });
-    Response<ResponseBody> response2 = pop.robots().execute();
+      //   Response<ResponseBody> response2 = pop.robots().execute();
 //    System.out.println("Response from: " + response2.raw().request().url());
 //    System.out.println(response2.body().string());
   }

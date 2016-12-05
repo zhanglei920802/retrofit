@@ -41,6 +41,9 @@ final class DefaultCallAdapterFactory extends CallAdapter.Factory {
 
             @Override
             public Call<Object> adapt(Call<Object> call) {
+                /**
+                 * 这里返回了默认的call,而没有立即执行
+                 */
                 return call;
             }
         };

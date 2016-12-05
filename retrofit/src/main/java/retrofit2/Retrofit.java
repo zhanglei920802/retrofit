@@ -126,10 +126,17 @@ public final class Retrofit {
      */
     @SuppressWarnings("unchecked") // Single-interface proxy creation guarded by parameter safety.
     public <T> T create(final Class<T> service) {
+        //检验是不是接口
         Utils.validateServiceInterface(service);
+
+        //校验服务中的方法
         if (validateEagerly) {
             eagerlyValidateMethods(service);
         }
+
+        /**
+         * 创建代理类
+         */
         return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[]{service},
                 new InvocationHandler() {
                     private final Platform platform = Platform.get();
@@ -141,20 +148,37 @@ public final class Retrofit {
                         if (method.getDeclaringClass() == Object.class) {
                             return method.invoke(this, args);
                         }
+
+                        //java8中的默认方法
                         if (platform.isDefaultMethod(method)) {
                             return platform.invokeDefaultMethod(method, service, proxy, args);
                         }
+
+                        //通过接口中定义的方法找到对应的ServiceMethod
                         ServiceMethod<Object, Object> serviceMethod =
                                 (ServiceMethod<Object, Object>) loadServiceMethod(method);
+
+
                         OkHttpCall<Object> okHttpCall = new OkHttpCall<>(serviceMethod, args);
+                        /**
+                         * 返回一个call的代理
+                         */
                         return serviceMethod.callAdapter.adapt(okHttpCall);
                     }
                 });
     }
 
+    /**
+     * 校验方法
+     *
+     * @param service
+     */
     private void eagerlyValidateMethods(Class<?> service) {
         Platform platform = Platform.get();
         for (Method method : service.getDeclaredMethods()) {
+            /**
+             * 接口默认方法只有在jdk8之后才有
+             */
             if (!platform.isDefaultMethod(method)) {
                 loadServiceMethod(method);
             }
@@ -162,9 +186,11 @@ public final class Retrofit {
     }
 
     ServiceMethod<?, ?> loadServiceMethod(Method method) {
+        //默认从cache中取
         ServiceMethod<?, ?> result = serviceMethodCache.get(method);
         if (result != null) return result;
 
+        //读写的时候都加锁
         synchronized (serviceMethodCache) {
             result = serviceMethodCache.get(method);
             if (result == null) {
